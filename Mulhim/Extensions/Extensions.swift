@@ -74,47 +74,21 @@ struct DiamondShape: Shape {
 
 // MARK: - Glass Modifier
 extension View {
-    func glass(cornerRadius: CGFloat = 20, inDarkMode: Bool = false) -> some View {
-        self.background(
-            inDarkMode
-                ? Color.cardDark
-                : Color.cardLight,
-            in: RoundedRectangle(cornerRadius: cornerRadius)
-        )
-        .background(
-            inDarkMode
-                ? .ultraThinMaterial.opacity(0.6)
-                : .regularMaterial.opacity(0.7),
-            in: RoundedRectangle(cornerRadius: cornerRadius)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(
-                    LinearGradient(colors: [
-                        Color.gold.opacity(0.3),
-                        Color.gold.opacity(0.1),
-                        Color.gold.opacity(0.05),
-                    ], startPoint: .topLeading, endPoint: .bottomTrailing),
-                    lineWidth: 1
-                )
-        )
-        .shadow(
-            color: Color.greenIslamic.opacity(0.06),
-            radius: 12, x: 0, y: 4
-        )
-    }
-
-    func glassButton() -> some View {
+    func glass(cornerRadius: CGFloat = 20) -> some View {
         self
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .background(.regularMaterial.opacity(0.7), in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.gold.opacity(0.2), lineWidth: 1)
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(
+                        LinearGradient(colors: [
+                            Color.gold.opacity(0.25),
+                            Color.gold.opacity(0.08),
+                            Color.gold.opacity(0.03),
+                        ], startPoint: .topLeading, endPoint: .bottomTrailing),
+                        lineWidth: 1
+                    )
             )
-    }
-
-    func safeHover() -> some View {
-        self
+            .shadow(color: Color.greenIslamic.opacity(0.06), radius: 12, x: 0, y: 4)
     }
 }
 

@@ -118,15 +118,9 @@ struct PrayerTimesView: View {
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .foregroundColor(.greenIslamic)
 
-                    HStack(spacing: 20) {
-                        Label(next.time, systemImage: "clock.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.textDark)
-
-                        Label("\(loc.prayerDate?.meta.timezone ?? "")", systemImage: "globe")
-                            .font(.system(size: 14))
-                            .foregroundColor(.textMuted)
-                    }
+                    Label(next.time, systemImage: "clock.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.textDark)
                 }
             }
         }
