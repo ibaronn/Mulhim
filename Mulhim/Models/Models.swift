@@ -1,5 +1,4 @@
 import Foundation
-import CoreLocation
 
 // MARK: - Prayer Times
 struct PrayerTimings: Codable {
@@ -36,38 +35,6 @@ struct PrayerMeta: Codable {
     let timezone: String
 }
 
-// MARK: - Surah
-struct SurahResponse: Codable {
-    let data: [Surah]
-}
-
-struct SurahDetailResponse: Codable {
-    let data: SurahDetail
-}
-
-struct Surah: Codable, Identifiable {
-    var id: Int { number }
-    let number: Int
-    let name: String
-    let englishName: String
-    let englishNameTranslation: String
-    let numberOfAyahs: Int
-    let revelationType: String
-}
-
-struct SurahDetail: Codable {
-    let number: Int
-    let name: String
-    let englishName: String
-    let ayahs: [Ayah]
-}
-
-struct Ayah: Codable, Identifiable {
-    let number: Int
-    let text: String
-    var id: Int { number }
-}
-
 // MARK: - Azkar
 struct Zikr: Identifiable {
     let id = UUID()
@@ -79,5 +46,6 @@ struct Zikr: Identifiable {
 struct ZikrCategory: Identifiable {
     let id = UUID()
     let name: String
+    let icon: String
     let items: [Zikr]
 }
