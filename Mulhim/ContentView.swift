@@ -57,18 +57,7 @@ struct ContentView: View {
     private var tabBar: some View {
         HStack(spacing: 0) {
             ForEach(MulhimTab.allCases, id: \.self) { tab in
-                Button {
-                    withAnimation(.easeOut(duration: 0.2)) { selected = tab }
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: tab.rawValue).font(.system(size: 18)).frame(height: 20)
-                        Text(tab.title).font(.system(size: 10)).fontWeight(selected == tab ? .bold : .regular)
-                    }
-                    .frame(maxWidth: .infinity).padding(.vertical, 8)
-                    .background(selected == tab ? Color.gold.opacity(0.12) : nil, in: RoundedRectangle(cornerRadius: 14))
-                }
-                .buttonStyle(.plain)
-                .foregroundColor(selected == tab ? .gold : .textS)
+                tabButton(tab)
             }
         }
         .padding(.horizontal, 8).padding(.vertical, 5)
@@ -76,5 +65,20 @@ struct ContentView: View {
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(.gold.opacity(0.15), lineWidth: 1))
         .shadow(color: .black.opacity(0.05), radius: 8)
         .padding(.horizontal, 12).padding(.bottom, 8)
+    }
+
+    private func tabButton(_ tab: MulhimTab) -> some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.2)) { selected = tab }
+        } label: {
+            VStack(spacing: 3) {
+                Image(systemName: tab.rawValue).font(.system(size: 18)).frame(height: 20)
+                Text(tab.title).font(.system(size: 10)).fontWeight(selected == tab ? .bold : .regular)
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 8)
+            .background(selected == tab ? Color.gold.opacity(0.12) : nil, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(selected == tab ? .gold : .textS)
     }
 }

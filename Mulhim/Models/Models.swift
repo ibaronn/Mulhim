@@ -46,6 +46,7 @@ struct SurahDetailResponse: Codable {
 }
 
 struct Surah: Codable, Identifiable {
+    var id: Int { number }
     let number: Int
     let name: String
     let englishName: String

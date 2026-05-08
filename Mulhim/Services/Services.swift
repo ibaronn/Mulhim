@@ -5,7 +5,7 @@ import SwiftUI
 
 // MARK: - Location Service
 @MainActor
-class LocationViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+class LocationViewModel: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate {
     @Published var location: CLLocation?
     @Published var heading: CLHeading?
     @Published var authStatus: CLAuthorizationStatus = .notDetermined
