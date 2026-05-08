@@ -160,6 +160,8 @@ class DailyTracker: ObservableObject {
     private let key = "dailyRecords"
 
     init() {
+        let todayStr = Self.dateKey()
+        self.today = DailyRecord(date: todayStr, completedZikrIds: [], completedSunnahIds: [], tasbihCounts: [:])
         let defaults = UserDefaults.standard
         if let data = defaults.data(forKey: key),
            let all = try? JSONDecoder().decode([DailyRecord].self, from: data) {
@@ -167,11 +169,9 @@ class DailyTracker: ObservableObject {
         } else {
             self.history = []
         }
-        let todayStr = Self.dateKey()
         if let existing = self.history.first(where: { $0.date == todayStr }) {
             self.today = existing
         } else {
-            self.today = DailyRecord(date: todayStr, completedZikrIds: [], completedSunnahIds: [], tasbihCounts: [:])
             self.history.insert(self.today, at: 0)
         }
     }
