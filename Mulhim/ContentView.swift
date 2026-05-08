@@ -62,7 +62,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 8).padding(.vertical, 5)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(.gold.opacity(0.15), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gold.opacity(0.15), lineWidth: 1))
         .shadow(color: .black.opacity(0.05), radius: 8)
         .padding(.horizontal, 12).padding(.bottom, 8)
     }
@@ -76,9 +76,9 @@ struct ContentView: View {
                 Text(tab.title).font(.system(size: 10)).fontWeight(selected == tab ? .bold : .regular)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 8)
-            .background(selected == tab ? Color.gold.opacity(0.12) : nil, in: RoundedRectangle(cornerRadius: 14))
+            .background(selected == tab ? Color.gold.opacity(0.12) : Color.clear, in: RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .foregroundColor(selected == tab ? .gold : .textS)
+        .foregroundColor(selected == tab ? Color.gold : .textS)
     }
 }
