@@ -5,6 +5,17 @@ struct QiblaView: View {
     @EnvironmentObject private var loc: LocationViewModel
     @State private var rotation: Double = 0
     @State private var appear = false
+    @State private var wasFacingQibla = false
+
+    private let qiblaThreshold: Double = 4
+
+    private var isFacingQibla: Bool {
+        let diff = abs((loc.qiblaDirection + rotation).truncatingRemainder(dividingBy: 360))
+        return diff < qiblaThreshold || diff > (360 - qiblaThreshold)
+    }
+
+    private var activeColor: Color { isFacingQibla ? .greenIslamic : .gold }
+    private var activeColorOpacity: Double { isFacingQibla ? 0.35 : 0.15 }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -29,11 +40,21 @@ struct QiblaView: View {
                 withAnimation(.linear(duration: 0.3)) {
                     rotation = -h.trueHeading
                 }
+                checkQiblaAlignment()
             }
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) { appear = true }
         }
+    }
+
+    private func checkQiblaAlignment() {
+        let facing = isFacingQibla
+        if facing && !wasFacingQibla {
+            let impact = UIImpactFeedbackGenerator(style: .rigid)
+            impact.impactOccurred(intensity: 0.7)
+        }
+        wasFacingQibla = facing
     }
 
     // MARK: - Location Needed
@@ -88,10 +109,17 @@ struct QiblaView: View {
                         .frame(width: 270, height: 270)
                         .overlay(
                             Circle()
-                                .stroke(Color.gold.opacity(0.15), lineWidth: 1.5)
+                                .stroke(activeColor.opacity(activeColorOpacity), lineWidth: 1.5)
                         )
 
-                    TickMarks()
+                    if isFacingQibla {
+                        Circle()
+                            .stroke(Color.greenIslamic.opacity(0.08), lineWidth: 12)
+                            .frame(width: 310, height: 310)
+                            .scaleEffect(appear ? 1 : 0.85)
+                    }
+
+                    TickMarks(activeColor: activeColor, isAligned: isFacingQibla)
                         .frame(width: 250, height: 250)
 
                     Group {
@@ -101,13 +129,21 @@ struct QiblaView: View {
                         Text("E").font(.system(size: 13, weight: .bold)).foregroundColor(.textMuted).offset(x: 120)
                     }
 
-                    QiblaArrow(direction: loc.qiblaDirection)
+                    QiblaArrow(direction: loc.qiblaDirection, isAligned: isFacingQibla)
                         .rotationEffect(.degrees(loc.qiblaDirection))
 
                     Circle()
-                        .fill(Color.greenIslamic)
+                        .fill(activeColor)
                         .frame(width: 10, height: 10)
-                        .shadow(color: Color.gold.opacity(0.3), radius: 4)
+                        .shadow(color: activeColor.opacity(0.4), radius: isFacingQibla ? 10 : 4)
+
+                    if isFacingQibla {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.greenIslamic)
+                            .offset(y: 110)
+                            .transition(.scale.combined(with: .opacity))
+                    }
                 }
                 .rotationEffect(.degrees(rotation))
                 .animation(.easeOut(duration: 0.3), value: rotation)
@@ -122,31 +158,36 @@ struct QiblaView: View {
     private var directionCard: some View {
         PremiumCard {
             VStack(spacing: 8) {
-                Text("اتجاه القبلة")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.textMuted)
+                HStack(spacing: 6) {
+                    Image(systemName: isFacingQibla ? "checkmark.circle.fill" : "location.north.line")
+                        .font(.system(size: 18))
+                        .foregroundColor(activeColor)
+                    Text(isFacingQibla ? "أنت تتجه إلى القبلة" : "اتجاه القبلة")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.textMuted)
+                }
 
                 HStack(spacing: 6) {
                     Image(systemName: "location.north.line")
                         .font(.system(size: 20))
-                        .foregroundColor(.gold)
+                        .foregroundColor(activeColor)
                     Text("\(loc.qiblaDirection, specifier: "%.1f")°")
                         .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .foregroundColor(.greenIslamic)
+                        .foregroundColor(isFacingQibla ? .greenIslamic : .greenIslamic)
                 }
 
                 Text("بالنسبة للشمال الحقيقي")
                     .font(.system(size: 13))
                     .foregroundColor(.textMuted)
 
-                // Direction name
                 Text(directionName)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.gold)
+                    .foregroundColor(activeColor)
                     .padding(.top, 4)
             }
         }
         .padding(.horizontal, 40)
+        .animation(.easeOut(duration: 0.3), value: isFacingQibla)
     }
 
     private var directionName: String {
@@ -167,6 +208,9 @@ struct QiblaView: View {
 
 // MARK: - Tick Marks
 struct TickMarks: View {
+    var activeColor: Color = .gold
+    var isAligned: Bool = false
+
     var body: some View {
         GeometryReader { geo in
             let r = geo.size.width / 2
@@ -174,7 +218,7 @@ struct TickMarks: View {
                 let angle = Double(i) * 5
                 let isMajor = i % 6 == 0
                 Rectangle()
-                    .fill(isMajor ? Color.textDark.opacity(0.4) : Color.textMuted.opacity(0.2))
+                    .fill(isMajor ? activeColor.opacity(isAligned ? 0.5 : 0.4) : Color.textMuted.opacity(0.2))
                     .frame(width: isMajor ? 2 : 1, height: isMajor ? 14 : 8)
                     .offset(y: r - 16 - (isMajor ? 14 : 8) / 2)
                     .rotationEffect(.degrees(angle))
@@ -186,15 +230,18 @@ struct TickMarks: View {
 // MARK: - Qibla Arrow
 struct QiblaArrow: View {
     let direction: Double
+    var isAligned: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
             Image(systemName: "location.north.fill")
                 .font(.system(size: 32))
-                .foregroundColor(.gold)
-                .shadow(color: Color.gold.opacity(0.4), radius: 8, x: 0, y: 2)
+                .foregroundColor(isAligned ? .greenIslamic : .gold)
+                .shadow(color: (isAligned ? Color.greenIslamic : Color.gold).opacity(0.4), radius: isAligned ? 12 : 8, x: 0, y: 2)
             Spacer()
         }
         .frame(height: 80)
     }
 }
+
+
