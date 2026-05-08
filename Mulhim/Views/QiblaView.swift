@@ -7,15 +7,15 @@ struct QiblaView: View {
     @State private var appear = false
     @State private var wasFacingQibla = false
 
-    private let qiblaThreshold: Double = 4
+    private let threshold: Double = 4
 
-    private var isFacingQibla: Bool {
+    private var facingQibla: Bool {
         let diff = abs((loc.qiblaDirection + rotation).truncatingRemainder(dividingBy: 360))
-        return diff < qiblaThreshold || diff > (360 - qiblaThreshold)
+        return diff < threshold || diff > (360 - threshold)
     }
 
-    private var activeColor: Color { isFacingQibla ? .greenIslamic : .gold }
-    private var activeColorOpacity: Double { isFacingQibla ? 0.35 : 0.15 }
+    private var activeColor: Color { facingQibla ? .greenIslamic : .gold }
+    private var activeOpacity: Double { facingQibla ? 0.4 : 0.12 }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -37,50 +37,34 @@ struct QiblaView: View {
         .background(AppBackground())
         .onReceive(loc.$heading) { h in
             if let h = h {
-                withAnimation(.linear(duration: 0.3)) {
-                    rotation = -h.trueHeading
-                }
-                checkQiblaAlignment()
+                withAnimation(.linear(duration: 0.3)) { rotation = -h.trueHeading }
+                checkAlignment()
             }
         }
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) { appear = true }
-        }
+        .onAppear { withAnimation(.easeOut(duration: 0.6)) { appear = true } }
     }
 
-    private func checkQiblaAlignment() {
-        let facing = isFacingQibla
-        if facing && !wasFacingQibla {
-            let impact = UIImpactFeedbackGenerator(style: .rigid)
-            impact.impactOccurred(intensity: 0.7)
+    private func checkAlignment() {
+        if facingQibla && !wasFacingQibla {
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.7)
         }
-        wasFacingQibla = facing
+        wasFacingQibla = facingQibla
     }
 
     // MARK: - Location Needed
     private var locationNeeded: some View {
         VStack(spacing: 16) {
             Spacer().frame(height: 40)
-            Image(systemName: "location.slash")
-                .font(.system(size: 48))
-                .foregroundColor(.gold)
-                .symbolRenderingMode(.hierarchical)
-            Text("الرجاء السماح بالوصول إلى الموقع")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.textDark)
+            Image(systemName: "location.slash").font(.system(size: 48)).foregroundColor(.gold).symbolRenderingMode(.hierarchical)
+            Text("الرجاء السماح بالوصول إلى الموقع").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundColor(.textDark)
             Button { loc.requestPermission() } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "location.fill")
-                    Text("السماح بالموقع")
-                        .fontWeight(.semibold)
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 14)
-                .background(Color.greenIslamic, in: RoundedRectangle(cornerRadius: 14))
-                .shadow(color: Color.greenIslamic.opacity(0.2), radius: 8, y: 4)
-            }
-            .buttonStyle(.plain)
+                    Text("السماح بالموقع").fontWeight(.semibold)
+                }.foregroundColor(.white).padding(.horizontal, 28).padding(.vertical, 14)
+                    .background(Color.greenIslamic, in: RoundedRectangle(cornerRadius: 14))
+                    .shadow(color: Color.greenIslamic.opacity(0.2), radius: 8, y: 4)
+            }.buttonStyle(.plain)
             Spacer().frame(height: 80)
         }
     }
@@ -89,12 +73,8 @@ struct QiblaView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             Spacer().frame(height: 60)
-            ProgressView()
-                .scaleEffect(1.2)
-                .tint(.gold)
-            Text("جاري تحديد موقعك...")
-                .font(.system(size: 15))
-                .foregroundColor(.textMuted)
+            ProgressView().scaleEffect(1.2).tint(.gold)
+            Text("جاري تحديد موقعك...").font(.system(size: 15)).foregroundColor(.textMuted)
             Spacer().frame(height: 100)
         }
     }
@@ -104,44 +84,45 @@ struct QiblaView: View {
         PremiumCard {
             VStack(spacing: 0) {
                 ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial.opacity(0.8))
-                        .frame(width: 270, height: 270)
-                        .overlay(
-                            Circle()
-                                .stroke(activeColor.opacity(activeColorOpacity), lineWidth: 1.5)
-                        )
-
-                    if isFacingQibla {
-                        Circle()
-                            .stroke(Color.greenIslamic.opacity(0.08), lineWidth: 12)
-                            .frame(width: 310, height: 310)
+                    // Outer glow ring when aligned
+                    if facingQibla {
+                        Circle().stroke(Color.greenIslamic.opacity(0.1), lineWidth: 14)
+                            .frame(width: 300, height: 300)
                             .scaleEffect(appear ? 1 : 0.85)
                     }
 
-                    TickMarks(activeColor: activeColor, isAligned: isFacingQibla)
-                        .frame(width: 250, height: 250)
+                    // Compass background - more transparent (ultraThin)
+                    Circle().fill(.ultraThinMaterial).frame(width: 260, height: 260)
+                        .overlay(Circle().stroke(activeColor.opacity(activeOpacity), lineWidth: 2))
 
-                    Group {
-                        Text("N").font(.system(size: 13, weight: .bold)).foregroundColor(.textMuted).offset(y: -120)
-                        Text("S").font(.system(size: 13, weight: .bold)).foregroundColor(.textMuted).offset(y: 120)
-                        Text("W").font(.system(size: 13, weight: .bold)).foregroundColor(.textMuted).offset(x: -120)
-                        Text("E").font(.system(size: 13, weight: .bold)).foregroundColor(.textMuted).offset(x: 120)
+                    // Tick marks
+                    TickView()
+                        .frame(width: 240, height: 240)
+
+                    // N/S/E/W labels inside border
+                    Text("N").font(.system(size: 12, weight: .bold)).foregroundColor(.textMuted).offset(y: -112)
+                    Text("S").font(.system(size: 12, weight: .bold)).foregroundColor(.textMuted).offset(y: 112)
+                    Text("W").font(.system(size: 12, weight: .bold)).foregroundColor(.textMuted).offset(x: -112)
+                    Text("E").font(.system(size: 12, weight: .bold)).foregroundColor(.textMuted).offset(x: 112)
+
+                    // Qibla arrow
+                    VStack(spacing: 0) {
+                        Image(systemName: "location.north.fill").font(.system(size: 28))
+                            .foregroundColor(activeColor)
+                            .shadow(color: activeColor.opacity(0.5), radius: facingQibla ? 12 : 6, x: 0, y: 2)
+                            .rotationEffect(.degrees(loc.qiblaDirection))
+                        Spacer()
                     }
+                    .frame(height: 70)
 
-                    QiblaArrow(direction: loc.qiblaDirection, isAligned: isFacingQibla)
-                        .rotationEffect(.degrees(loc.qiblaDirection))
+                    // Center dot
+                    Circle().fill(activeColor).frame(width: 8, height: 8)
+                        .shadow(color: activeColor.opacity(0.5), radius: 6)
 
-                    Circle()
-                        .fill(activeColor)
-                        .frame(width: 10, height: 10)
-                        .shadow(color: activeColor.opacity(0.4), radius: isFacingQibla ? 10 : 4)
-
-                    if isFacingQibla {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 36))
-                            .foregroundColor(.greenIslamic)
-                            .offset(y: 110)
+                    // ✅ when aligned
+                    if facingQibla {
+                        Text("✓").font(.system(size: 28, weight: .bold)).foregroundColor(.greenCompleted)
+                            .offset(y: 100)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
@@ -157,37 +138,23 @@ struct QiblaView: View {
     // MARK: - Direction Card
     private var directionCard: some View {
         PremiumCard {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 HStack(spacing: 6) {
-                    Image(systemName: isFacingQibla ? "checkmark.circle.fill" : "location.north.line")
-                        .font(.system(size: 18))
-                        .foregroundColor(activeColor)
-                    Text(isFacingQibla ? "أنت تتجه إلى القبلة" : "اتجاه القبلة")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.textMuted)
+                    Image(systemName: facingQibla ? "checkmark.circle.fill" : "location.north.line")
+                        .font(.system(size: 16)).foregroundColor(activeColor)
+                    Text(facingQibla ? "أنت تتجه إلى القبلة" : "اتجاه القبلة")
+                        .font(.system(size: 14, weight: .medium)).foregroundColor(.textMuted)
                 }
-
-                HStack(spacing: 6) {
-                    Image(systemName: "location.north.line")
-                        .font(.system(size: 20))
-                        .foregroundColor(activeColor)
-                    Text("\(loc.qiblaDirection, specifier: "%.1f")°")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .foregroundColor(isFacingQibla ? .greenIslamic : .greenIslamic)
+                HStack(spacing: 4) {
+                    Text("\(loc.qiblaDirection, specifier: "%.1f")°").font(.system(size: 38, weight: .bold, design: .rounded))
+                        .foregroundColor(.greenIslamic)
                 }
-
-                Text("بالنسبة للشمال الحقيقي")
-                    .font(.system(size: 13))
-                    .foregroundColor(.textMuted)
-
-                Text(directionName)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(activeColor)
-                    .padding(.top, 4)
+                Text("بالنسبة للشمال الحقيقي").font(.system(size: 12)).foregroundColor(.textMuted)
+                Text(directionName).font(.system(size: 15, weight: .semibold)).foregroundColor(activeColor).padding(.top, 2)
             }
         }
         .padding(.horizontal, 40)
-        .animation(.easeOut(duration: 0.3), value: isFacingQibla)
+        .animation(.easeOut(duration: 0.3), value: facingQibla)
     }
 
     private var directionName: String {
@@ -206,42 +173,19 @@ struct QiblaView: View {
     }
 }
 
-// MARK: - Tick Marks
-struct TickMarks: View {
-    var activeColor: Color = .gold
-    var isAligned: Bool = false
-
+struct TickView: View {
     var body: some View {
         GeometryReader { geo in
             let r = geo.size.width / 2
             ForEach(0..<72) { i in
-                let angle = Double(i) * 5
-                let isMajor = i % 6 == 0
+                let a = Double(i) * 5
+                let big = i % 6 == 0
                 Rectangle()
-                    .fill(isMajor ? activeColor.opacity(isAligned ? 0.5 : 0.4) : Color.textMuted.opacity(0.2))
-                    .frame(width: isMajor ? 2 : 1, height: isMajor ? 14 : 8)
-                    .offset(y: r - 16 - (isMajor ? 14 : 8) / 2)
-                    .rotationEffect(.degrees(angle))
+                    .fill(big ? Color.textDark.opacity(0.3) : Color.textMuted.opacity(0.15))
+                    .frame(width: big ? 1.5 : 0.5, height: big ? 12 : 6)
+                    .offset(y: r - 10 - (big ? 12 : 6) / 2)
+                    .rotationEffect(.degrees(a))
             }
         }
     }
 }
-
-// MARK: - Qibla Arrow
-struct QiblaArrow: View {
-    let direction: Double
-    var isAligned: Bool = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Image(systemName: "location.north.fill")
-                .font(.system(size: 32))
-                .foregroundColor(isAligned ? .greenIslamic : .gold)
-                .shadow(color: (isAligned ? Color.greenIslamic : Color.gold).opacity(0.4), radius: isAligned ? 12 : 8, x: 0, y: 2)
-            Spacer()
-        }
-        .frame(height: 80)
-    }
-}
-
-

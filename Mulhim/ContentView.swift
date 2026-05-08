@@ -9,7 +9,7 @@ enum MulhimTab: String, CaseIterable {
         switch self {
         case .prayer: return "الصلاة"
         case .qibla: return "القبلة"
-        case .azkar: return "الأذكار"
+        case .azkar: return "العبادات"
         }
     }
 
@@ -76,7 +76,7 @@ struct ContentView: View {
                     .offset(y: splashPhase == .second ? 0 : 20)
                     .animation(.easeOut(duration: 0.5).delay(0.2), value: splashPhase)
 
-                Text("القبلة • الصلاة • الأذكار")
+                Text("القبلة • الصلاة • العبادات")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.textMuted)
                     .opacity(splashPhase == .second ? 1 : 0)
