@@ -1,0 +1,45 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Generate App Icon
+      run: swift Scripts/generate-icon.swift
+
+    - name: Generate Xcode Project
+      run: |
+        brew install xcodegen
+        xcodegen
+
+    - name: Build .app Bundle
+      run: |
+        xcodebuild build \
+          -project Mulhim.xcodeproj \
+          -scheme Mulhim \
+          -destination 'generic/platform=iOS' \
+          -configuration Release \
+          -derivedDataPath build \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO
+
+    - name: Package unsigned IPA
+      run: |
+        mkdir -p Payload
+        cp -r build/Build/Products/Release-iphoneos/Mulhim.app Payload/
+        zip -r Mulhim-unsigned.ipa Payload/
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Mulhim-unsigned-IPA
+        path: Mulhim-unsigned.ipa
+        compression-level: 0

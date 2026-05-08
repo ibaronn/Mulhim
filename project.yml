@@ -1,0 +1,22 @@
+name: Mulhim
+options:
+  bundleIdPrefix: com.mulhim
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+targets:
+  Mulhim:
+    type: application
+    platform: iOS
+    sources:
+      - Mulhim
+    settings:
+      base:
+        INFOPLIST_FILE: Mulhim/Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.mulhim.app
+        PRODUCT_NAME: Mulhim
+        DEVELOPMENT_TEAM: ""
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
