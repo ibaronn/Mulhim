@@ -255,6 +255,66 @@ struct AyaCard: View {
     }
 }
 
+// MARK: - Prayer Row Premium
+struct PrayerRowPremium: View {
+    let name: String
+    let time: String
+    let isNext: Bool
+    var icon: String
+
+    @State private var animateIn = false
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundColor(isNext ? .gold : .textMuted)
+                .frame(width: 36, height: 36)
+                .background(isNext ? Color.gold.opacity(0.12) : Color.textMuted.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Text(name)
+                .font(.system(size: 16, weight: isNext ? .bold : .regular))
+                .foregroundColor(isNext ? .greenIslamic : .textDark)
+
+            Spacer()
+
+            Text(time)
+                .font(.system(size: 17, weight: .semibold, design: .monospaced))
+                .foregroundColor(.textDark)
+
+            if isNext {
+                Text("التالي")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Color.greenIslamic, in: RoundedRectangle(cornerRadius: 6))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            isNext
+                ? Color.greenIslamic.opacity(0.04)
+                : Color.clear,
+            in: RoundedRectangle(cornerRadius: 12)
+        )
+        .opacity(animateIn ? 1 : 0)
+        .offset(x: animateIn ? 0 : -20)
+        .animation(.easeOut(duration: 0.3).delay(animationDelay), value: animateIn)
+        .onAppear { animateIn = true }
+    }
+
+    private var animationDelay: Double {
+        let order = ["الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء"]
+        if let idx = order.firstIndex(of: name) {
+            return Double(idx) * 0.05
+        }
+        return 0
+    }
+}
+
 // MARK: - Category Picker
 struct CategoryPicker: View {
     let categories: [ZikrCategory]
